@@ -5,12 +5,26 @@ local mouse = player:GetMouse()
 local tool = Instance.new("Tool")
 tool.RequiresHandle = false
 tool.Name = "Permanent Tp Tool"
+
 tool.Activated:Connect(function()
 	local pos = mouse.Hit + Vector3.new(0, 2.5, 0)
-	pos = CFrame.new(pos.X, pos.Y, pos.Z)
-	player.Character.HumanoidRootPart.CFrame = pos
+	local cf = CFrame.new(pos.X, pos.Y, pos.Z)
+	player.Character.HumanoidRootPart.CFrame = cf
 end)
+
 tool.Parent = player.Backpack
+
+-- While true loop: ตรวจสอบว่าผู้เล่นยังมี tool
+task.spawn(function()
+	while true do
+		wait(1)
+		local hasTool = player.Backpack:FindFirstChild("Permanent Tp Tool") or player.Character:FindFirstChild("Permanent Tp Tool")
+		if not hasTool then
+			local newTool = tool:Clone()
+			newTool.Parent = player.Backpack
+		end
+	end
+end)
 
 -- UI Setup
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
@@ -32,7 +46,6 @@ toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSans
 toggleButton.TextScaled = true
-toggleButton.Name = "InvisButton"
 
 local closeButton = Instance.new("TextButton", frame)
 closeButton.Size = UDim2.new(0, 20, 0, 20)
@@ -42,7 +55,15 @@ closeButton.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeButton.Font = Enum.Font.SourceSans
 closeButton.TextSize = 18
-closeButton.Name = "CloseButton"
+
+local minimizeButton = Instance.new("TextButton", frame)
+minimizeButton.Size = UDim2.new(0, 20, 0, 20)
+minimizeButton.Position = UDim2.new(1, -50, 0, 5)
+minimizeButton.Text = "-"
+minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.Font = Enum.Font.SourceSans
+minimizeButton.TextSize = 18
 
 local signatureLabel = Instance.new("TextLabel", frame)
 signatureLabel.Size = UDim2.new(1, 0, 0, 10)
@@ -54,30 +75,13 @@ signatureLabel.Font = Enum.Font.SourceSans
 signatureLabel.TextScaled = true
 signatureLabel.TextTransparency = 0.3
 
--- Minimize Button
-local minimizeButton = Instance.new("TextButton", frame)
-minimizeButton.Size = UDim2.new(0, 20, 0, 20)
-minimizeButton.Position = UDim2.new(1, -50, 0, 5)
-minimizeButton.Text = "-"
-minimizeButton.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
-minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-minimizeButton.Font = Enum.Font.SourceSans
-minimizeButton.TextSize = 18
-minimizeButton.Name = "MinimizeButton"
-
+-- UI toggle minimize
 local minimized = false
-
 minimizeButton.MouseButton1Click:Connect(function()
 	minimized = not minimized
-	if minimized then
-		toggleButton.Visible = false
-		signatureLabel.Visible = false
-		frame.Size = UDim2.new(0, 120, 0, 30)
-	else
-		toggleButton.Visible = true
-		signatureLabel.Visible = true
-		frame.Size = UDim2.new(0, 120, 0, 80)
-	end
+	toggleButton.Visible = not minimized
+	signatureLabel.Visible = not minimized
+	frame.Size = minimized and UDim2.new(0, 120, 0, 30) or UDim2.new(0, 120, 0, 80)
 end)
 
 -- Sound
@@ -131,7 +135,7 @@ local function toggleInvisibility()
 	end
 end
 
--- Button and Key listeners
+-- Button + Key Event
 toggleButton.MouseButton1Click:Connect(toggleInvisibility)
 closeButton.MouseButton1Click:Connect(function()
 	frame.Visible = false
