@@ -2,37 +2,27 @@ local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
 
 -- Create Teleport Tool
-local tool = Instance.new("Tool")
-tool.RequiresHandle = false
-tool.Name = "วาปล่อตอกดาก"
+local function createTeleportTool()
+	local tool = Instance.new("Tool")
+	tool.RequiresHandle = false
+	tool.Name = "อุปกรณ์วาปร์"
 
-tool.Activated:Connect(function()
-	local pos = mouse.Hit + Vector3.new(0, 2.5, 0)
-	local cf = CFrame.new(pos.X, pos.Y, pos.Z)
-	player.Character.HumanoidRootPart.CFrame = cf
-end)
+	tool.Activated:Connect(function()
+		local pos = mouse.Hit + Vector3.new(0, 2.5, 0)
+		local cf = CFrame.new(pos.X, pos.Y, pos.Z)
+		player.Character.HumanoidRootPart.CFrame = cf
+	end)
 
-tool.Parent = player.Backpack
-
--- While true loop: ตรวจสอบว่าผู้เล่นยังมี tool
-task.spawn(function()
-	while true do
-		wait(1)
-		local hasTool = player.Backpack:FindFirstChild("Permanent Tp Tool") or player.Character:FindFirstChild("Permanent Tp Tool")
-		if not hasTool then
-			local newTool = tool:Clone()
-			newTool.Parent = player.Backpack
-		end
-	end
-end)
+	return tool
+end
 
 -- UI Setup
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 120, 0, 80)
-frame.Position = UDim2.new(0.5, -60, 0.5, -40)
+frame.Size = UDim2.new(0, 120, 0, 110)
+frame.Position = UDim2.new(0.5, -60, 0.5, -55)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.Active = true
 frame.Draggable = true
@@ -46,6 +36,15 @@ toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSans
 toggleButton.TextScaled = true
+
+local giveToolButton = Instance.new("TextButton", frame)
+giveToolButton.Size = UDim2.new(0, 100, 0, 30)
+giveToolButton.Position = UDim2.new(0, 10, 0, 65)
+giveToolButton.Text = "รับอุปกรณ์วาปร์"
+giveToolButton.BackgroundColor3 = Color3.fromRGB(0, 255, 170)
+giveToolButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+giveToolButton.Font = Enum.Font.SourceSans
+giveToolButton.TextScaled = true
 
 local closeButton = Instance.new("TextButton", frame)
 closeButton.Size = UDim2.new(0, 20, 0, 20)
@@ -80,8 +79,9 @@ local minimized = false
 minimizeButton.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	toggleButton.Visible = not minimized
+	giveToolButton.Visible = not minimized
 	signatureLabel.Visible = not minimized
-	frame.Size = minimized and UDim2.new(0, 120, 0, 30) or UDim2.new(0, 120, 0, 80)
+	frame.Size = minimized and UDim2.new(0, 120, 0, 30) or UDim2.new(0, 120, 0, 110)
 end)
 
 -- Sound
@@ -134,6 +134,15 @@ local function toggleInvisibility()
 		setTransparency(char, 0)
 	end
 end
+
+-- Give Tool Button
+giveToolButton.MouseButton1Click:Connect(function()
+	local alreadyHas = player.Backpack:FindFirstChild("อุปกรณ์วาปร์") or (player.Character and player.Character:FindFirstChild("อุปกรณ์วาปร์"))
+	if not alreadyHas then
+		local tool = createTeleportTool()
+		tool.Parent = player.Backpack
+	end
+end)
 
 -- Button + Key Event
 toggleButton.MouseButton1Click:Connect(toggleInvisibility)
