@@ -1,0 +1,104 @@
+local key = Enum.KeyCode.X -- Key to toggle invisibility
+
+local invis_on = false
+
+-- UI Setup
+local player = game.Players.LocalPlayer
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 120, 0, 80)
+frame.Position = UDim2.new(0.5, -60, 0.5, -40)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.Active = true
+frame.Draggable = true
+
+local toggleButton = Instance.new("TextButton", frame)
+toggleButton.Size = UDim2.new(0, 100, 0, 30)
+toggleButton.Position = UDim2.new(0, 10, 0, 30)
+toggleButton.Text = "จงมองไม่เห็นกู"
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.SourceSans
+toggleButton.TextScaled = true
+
+local closeButton = Instance.new("TextButton", frame)
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Position = UDim2.new(1, -25, 0, 5)
+closeButton.Text = "X"
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Font = Enum.Font.SourceSans
+closeButton.TextSize = 18
+
+local signatureLabel = Instance.new("TextLabel", frame)
+signatureLabel.Size = UDim2.new(1, 0, 0, 10)
+signatureLabel.Position = UDim2.new(0, 0, 1, -10)
+signatureLabel.Text = "By: ChatAbc ,RB: Storm"
+signatureLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+signatureLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+signatureLabel.Font = Enum.Font.SourceSans
+signatureLabel.TextScaled = true
+signatureLabel.TextTransparency = 0.3
+
+-- Sound
+local sound = Instance.new("Sound", player:WaitForChild("PlayerGui"))
+sound.SoundId = "rbxassetid://942127495"
+sound.Volume = 1
+
+-- Transparent helper
+local function setTransparency(character, transparency)
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("Decal") then
+            part.Transparency = transparency
+        end
+    end
+end
+
+-- Invisibility logic
+local function toggleInvisibility()
+    invis_on = not invis_on
+    sound:Play()
+    local char = player.Character
+    if not char then return end
+
+    if invis_on then
+        local savedpos = char.HumanoidRootPart.CFrame
+        task.wait()
+        char:MoveTo(Vector3.new(-25.95, 84, 3537.55))
+        task.wait(0.15)
+
+        local seat = Instance.new('Seat', workspace)
+        seat.Anchored = false
+        seat.CanCollide = false
+        seat.Name = 'invischair'
+        seat.Transparency = 1
+        seat.Position = Vector3.new(-25.95, 84, 3537.55)
+
+        local weld = Instance.new("Weld", seat)
+        weld.Part0 = seat
+        weld.Part1 = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+
+        task.wait()
+        seat.CFrame = savedpos
+        setTransparency(char, 0.5)
+    else
+        local invisChair = workspace:FindFirstChild('invischair')
+        if invisChair then invisChair:Destroy() end
+        setTransparency(char, 0)
+    end
+end
+
+-- Button listeners
+toggleButton.MouseButton1Click:Connect(toggleInvisibility)
+closeButton.MouseButton1Click:Connect(function()
+    frame.Visible = false
+end)
+
+-- (Optional) Keyboard toggle with X
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == key then
+        toggleInvisibility()
+    end
+end)
