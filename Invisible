@@ -4,7 +4,7 @@ local mouse = player:GetMouse()
 -- Create Teleport Tool
 local tool = Instance.new("Tool")
 tool.RequiresHandle = false
-tool.Name = "Permanent Tp Tool"
+tool.Name = "วาปล่อตอกดาก"
 
 tool.Activated:Connect(function()
 	local pos = mouse.Hit + Vector3.new(0, 2.5, 0)
