@@ -185,7 +185,6 @@ invisBtn.MouseButton1Click:Connect(function()
 		invisBtn.Text = "เปิดล่องหน"
 	end
 end)
-
 -- ปุ่มเปิด/ปิดวาร์ปอัตโนมัติ
 local autoBtn = Instance.new("TextButton", main)
 autoBtn.Size = UDim2.new(0, 95, 0, 20)
@@ -218,4 +217,16 @@ player.CharacterAdded:Connect(function(char)
 			sound:Play()
 		end)
 	end
+end)
+
+local instantBtn = Instance.new("TextButton", main)
+instantBtn.Size = UDim2.new(0, 95, 0, 20)
+instantBtn.Position = UDim2.new(0, 100, 0, 105)
+instantBtn.Text = "เปิดเกิดทันที"
+instantBtn.TextSize = 10
+instantBtn.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+
+instantBtn.MouseButton1Click:Connect(function()
+	instantRespawn = not instantRespawn
+	instantBtn.Text = instantRespawn and "ปิดเกิดทันที" or "เปิดเกิดทันที"
 end)
