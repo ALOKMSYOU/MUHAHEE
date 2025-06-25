@@ -1,123 +1,148 @@
 local player = game.Players.LocalPlayer
-local key = Enum.KeyCode.X
-local invis_on = false
-local savedPosition = nil
-local loopWarp = false
-local warpTarget = Vector3.new(0, 10, 0)
+local character = player.Character or player.CharacterAdded:Wait()
+local mouse = player:GetMouse()
 
--- UI Setup
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "InvisWarpUI"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
-
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 150, 0, 280)
-frame.Position = UDim2.new(0.5, -75, 0.5, -140)
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-frame.Active = true
-frame.Draggable = true
-frame.Name = "MainFrame"
-
-local toggleButton = Instance.new("TextButton", frame)
-toggleButton.Size = UDim2.new(0, 130, 0, 30)
-toggleButton.Position = UDim2.new(0, 10, 0, 30)
-toggleButton.Text = "จงมองไม่เห็นกู"
-toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.Font = Enum.Font.SourceSans
-toggleButton.TextScaled = true
-
-local closeButton = Instance.new("TextButton", frame)
-closeButton.Size = UDim2.new(0, 20, 0, 20)
-closeButton.Position = UDim2.new(1, -25, 0, 5)
-closeButton.Text = "X"
-closeButton.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.Font = Enum.Font.SourceSans
-closeButton.TextSize = 18
-
-local saveButton = Instance.new("TextButton", frame)
-saveButton.Size = UDim2.new(0, 130, 0, 25)
-saveButton.Position = UDim2.new(0, 10, 0, 0)
-saveButton.Text = "เซฟพิกัด"
-saveButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-saveButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-saveButton.Font = Enum.Font.SourceSans
-saveButton.TextScaled = true
-
-local warpBackButton = Instance.new("TextButton", frame)
-warpBackButton.Size = UDim2.new(0, 130, 0, 25)
-warpBackButton.Position = UDim2.new(0, 10, 0, 60)
-warpBackButton.Text = "วาร์ปกลับ"
-warpBackButton.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
-warpBackButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-warpBackButton.Font = Enum.Font.SourceSans
-warpBackButton.TextScaled = true
-
-local clearButton = Instance.new("TextButton", frame)
-clearButton.Size = UDim2.new(0, 20, 0, 20)
-clearButton.Position = UDim2.new(1, -25, 1, -25)
-clearButton.Text = "-"
-clearButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-clearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-clearButton.Font = Enum.Font.SourceSans
-clearButton.TextSize = 18
-
-local loopButton = Instance.new("TextButton", frame)
-loopButton.Size = UDim2.new(0, 130, 0, 25)
-loopButton.Position = UDim2.new(0, 10, 0, 90)
-loopButton.Text = "🔁 Loop วาร์ป: OFF"
-loopButton.BackgroundColor3 = Color3.fromRGB(140, 80, 255)
-loopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-loopButton.Font = Enum.Font.SourceSans
-loopButton.TextScaled = true
-
-local coordBox = Instance.new("TextBox", frame)
-coordBox.Size = UDim2.new(0, 130, 0, 25)
-coordBox.Position = UDim2.new(0, 10, 0, 120)
-coordBox.PlaceholderText = "X, Y, Z"
-coordBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-coordBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-coordBox.Font = Enum.Font.SourceSans
-coordBox.TextScaled = true
-
-local copyButton = Instance.new("TextButton", frame)
-copyButton.Size = UDim2.new(0, 130, 0, 25)
-copyButton.Position = UDim2.new(0, 10, 0, 150)
-copyButton.Text = "📋 คัดลอกพิกัด"
-copyButton.BackgroundColor3 = Color3.fromRGB(80, 200, 255)
-copyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-copyButton.Font = Enum.Font.SourceSans
-copyButton.TextScaled = true
-
-local signatureLabel = Instance.new("TextLabel", frame)
-signatureLabel.Size = UDim2.new(1, 0, 0, 10)
-signatureLabel.Position = UDim2.new(0, 0, 1, -10)
-signatureLabel.Text = "By: ChatAbc ,RB: Storm"
-signatureLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-signatureLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-signatureLabel.Font = Enum.Font.SourceSans
-signatureLabel.TextScaled = true
-signatureLabel.TextTransparency = 0.3
-
--- Roblox icon ย่อ UI
-local icon = Instance.new("ImageButton", screenGui)
-icon.Size = UDim2.new(0, 40, 0, 40)
-icon.Position = UDim2.new(0, 10, 0, 10)
-icon.BackgroundTransparency = 1
-icon.Image = "rbxasset://textures/Logo128.png"
-
-icon.MouseButton1Click:Connect(function()
-	frame.Visible = not frame.Visible
-end)
-
--- Sound
+-- เสียง
 local sound = Instance.new("Sound", player:WaitForChild("PlayerGui"))
 sound.SoundId = "rbxassetid://942127495"
 sound.Volume = 1
 
--- Transparency function
+-- ตัวแปรระบบ
+local autoRespawnTp = false
+local lastDeathPosition = nil
+local invis_on = false
+
+-- GUI
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "HACKGUI"
+gui.ResetOnSpawn = false
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 200, 0, 160)
+main.Position = UDim2.new(0.5, -100, 0.5, -80)
+main.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1, -35, 0, 20)
+title.Position = UDim2.new(0, 5, 0, 3)
+title.Text = "HACKGUI"
+title.Font = Enum.Font.FredokaOne
+title.TextSize = 12
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.new(0, 0, 0)
+
+local close = Instance.new("TextButton", main)
+close.Size = UDim2.new(0, 18, 0, 18)
+close.Position = UDim2.new(1, -20, 0, 3)
+close.Text = "X"
+close.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+close.TextColor3 = Color3.new(1, 1, 1)
+close.TextScaled = true
+close.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
+
+local minimizeIcon = Instance.new("ImageButton", gui)
+minimizeIcon.Image = "rbxassetid://7414445494"
+minimizeIcon.Size = UDim2.new(0, 25, 0, 25)
+minimizeIcon.Position = UDim2.new(0, 10, 1, -35)
+minimizeIcon.Visible = false
+
+local minimizeBtn = Instance.new("TextButton", main)
+minimizeBtn.Text = "-"
+minimizeBtn.Size = UDim2.new(0, 18, 0, 18)
+minimizeBtn.Position = UDim2.new(1, -42, 0, 3)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+minimizeBtn.TextColor3 = Color3.new(1, 1, 1)
+minimizeBtn.TextScaled = true
+minimizeBtn.MouseButton1Click:Connect(function()
+	main.Visible = false
+	minimizeIcon.Visible = true
+end)
+
+minimizeIcon.MouseButton1Click:Connect(function()
+	main.Visible = true
+	minimizeIcon.Visible = false
+end)
+
+-- ปุ่มคัดลอกพิกัด
+local copyBtn = Instance.new("TextButton", main)
+copyBtn.Size = UDim2.new(0, 100, 0, 20)
+copyBtn.Position = UDim2.new(0, 5, 0, 30)
+copyBtn.Text = "คัดลอกพิกัด"
+copyBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+copyBtn.TextSize = 10
+
+copyBtn.MouseButton1Click:Connect(function()
+	local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if root then
+		setclipboard(tostring(root.Position))
+	end
+end)
+
+-- ช่องกรอกพิกัด
+local inputBox = Instance.new("TextBox", main)
+inputBox.Size = UDim2.new(0, 120, 0, 20)
+inputBox.Position = UDim2.new(0, 5, 0, 55)
+inputBox.PlaceholderText = "x,y,z"
+inputBox.TextSize = 10
+inputBox.Text = ""
+
+-- ปุ่มวาร์ป
+local tpBtn = Instance.new("TextButton", main)
+tpBtn.Size = UDim2.new(0, 60, 0, 20)
+tpBtn.Position = UDim2.new(0, 5, 0, 80)
+tpBtn.Text = "วาร์ป"
+tpBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+tpBtn.TextSize = 10
+
+tpBtn.MouseButton1Click:Connect(function()
+	local str = inputBox.Text
+	local x, y, z = str:match("([^,]+),([^,]+),([^,]+)")
+	if x and y and z then
+		local pos = Vector3.new(tonumber(x), tonumber(y), tonumber(z))
+		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+		if root then
+			root.CFrame = CFrame.new(pos)
+			sound:Play()
+		end
+	end
+end)
+
+-- ปุ่มรับอุปกรณ์วาร์ป
+local toolBtn = Instance.new("TextButton", main)
+toolBtn.Size = UDim2.new(0, 100, 0, 20)
+toolBtn.Position = UDim2.new(0, 5, 0, 105)
+toolBtn.Text = "รับอุปกรณ์วาร์ป"
+toolBtn.TextSize = 10
+toolBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+
+toolBtn.MouseButton1Click:Connect(function()
+	local tool = Instance.new("Tool")
+	tool.RequiresHandle = false
+	tool.Name = "อุปกรณ์วาร์ป"
+	tool.Parent = player.Backpack
+	tool.Activated:Connect(function()
+		local pos = mouse.Hit.Position + Vector3.new(0, 3, 0)
+		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+		if root then
+			root.CFrame = CFrame.new(pos)
+			sound:Play()
+		end
+	end)
+end)
+
+-- ปุ่มล่องหน
+local invisBtn = Instance.new("TextButton", main)
+invisBtn.Size = UDim2.new(0, 95, 0, 20)
+invisBtn.Position = UDim2.new(0, 5, 0, 130)
+invisBtn.Text = "เปิดล่องหน"
+invisBtn.TextSize = 10
+invisBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 255)
+
 local function setTransparency(character, transparency)
 	for _, part in pairs(character:GetDescendants()) do
 		if part:IsA("BasePart") or part:IsA("Decal") then
@@ -126,22 +151,22 @@ local function setTransparency(character, transparency)
 	end
 end
 
--- Invisibility logic
-local function toggleInvisibility()
+invisBtn.MouseButton1Click:Connect(function()
 	invis_on = not invis_on
 	sound:Play()
 	local char = player.Character
 	if not char then return end
 
 	if invis_on then
-		savedPosition = char.HumanoidRootPart.CFrame
+		local savedpos = char.HumanoidRootPart.CFrame
+		task.wait()
 		char:MoveTo(Vector3.new(-25.95, 84, 3537.55))
 		task.wait(0.15)
 
-		local seat = Instance.new("Seat", workspace)
+		local seat = Instance.new('Seat', workspace)
 		seat.Anchored = false
 		seat.CanCollide = false
-		seat.Name = "invischair"
+		seat.Name = 'invischair'
 		seat.Transparency = 1
 		seat.Position = Vector3.new(-25.95, 84, 3537.55)
 
@@ -150,60 +175,47 @@ local function toggleInvisibility()
 		weld.Part1 = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
 
 		task.wait()
-		seat.CFrame = savedPosition
-		setTransparency(char, 0.5)
+		seat.CFrame = savedpos
+		setTransparency(char, 0.25)
+		invisBtn.Text = "ปิดล่องหน"
 	else
-		local invisChair = workspace:FindFirstChild("invischair")
+		local invisChair = workspace:FindFirstChild('invischair')
 		if invisChair then invisChair:Destroy() end
 		setTransparency(char, 0)
-	end
-end
-
--- Button Events
-toggleButton.MouseButton1Click:Connect(toggleInvisibility)
-
-saveButton.MouseButton1Click:Connect(function()
-	local char = player.Character
-	if char then
-		savedPosition = char.HumanoidRootPart.CFrame
-		saveButton.Text = "✅ เซฟแล้ว"
-		task.delay(2, function() saveButton.Text = "เซฟพิกัด" end)
+		invisBtn.Text = "เปิดล่องหน"
 	end
 end)
 
-warpBackButton.MouseButton1Click:Connect(function()
-	if savedPosition and player.Character then
-		player.Character.HumanoidRootPart.CFrame = savedPosition
-		savedPosition = nil
+-- ปุ่มเปิด/ปิดวาร์ปอัตโนมัติ
+local autoBtn = Instance.new("TextButton", main)
+autoBtn.Size = UDim2.new(0, 95, 0, 20)
+autoBtn.Position = UDim2.new(0, 100, 0, 130)
+autoBtn.Text = "เปิดวาร์ปอัตโนมัติ"
+autoBtn.TextSize = 10
+autoBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+
+autoBtn.MouseButton1Click:Connect(function()
+	autoRespawnTp = not autoRespawnTp
+	autoBtn.Text = autoRespawnTp and "ปิดวาร์ปอัตโนมัติ" or "เปิดวาร์ปอัตโนมัติ"
+end)
+
+-- ระบบบันทึกและวาร์ปอัตโนมัติเมื่อเกิดใหม่
+player.CharacterAdded:Connect(function(char)
+	local humanoid = char:WaitForChild("Humanoid")
+	humanoid.Died:Connect(function()
+		local root = char:FindFirstChild("HumanoidRootPart")
+		if root then
+			lastDeathPosition = root.Position
+			inputBox.Text = string.format("%.2f,%.2f,%.2f", root.Position.X, root.Position.Y, root.Position.Z)
+		end
+	end)
+
+	if autoRespawnTp and lastDeathPosition then
+		task.defer(function()
+			wait(0.25)
+			local root = char:WaitForChild("HumanoidRootPart")
+			root.CFrame = CFrame.new(lastDeathPosition)
+			sound:Play()
+		end)
 	end
 end)
-
-clearButton.MouseButton1Click:Connect(function()
-	savedPosition = nil
-end)
-
-loopButton.MouseButton1Click:Connect(function()
-	local text = coordBox.Text
-	local x, y, z = string.match(text, "(-?%d+%.?%d*),%s*(-?%d+%.?%d*),%s*(-?%d+%.?%d*)")
-	if x and y and z then
-		warpTarget = Vector3.new(tonumber(x), tonumber(y), tonumber(z))
-		loopWarp = not loopWarp
-		loopButton.Text = loopWarp and "🔁 Loop วาร์ป: ON" or "🔁 Loop วาร์ป: OFF"
-	else
-		coordBox.Text = "❌ รูปแบบผิด"
-	end
-end)
-
-copyButton.MouseButton1Click:Connect(function()
-	local char = player.Character
-	if char then
-		local pos = char.HumanoidRootPart.Position
-		local text = string.format("Vector3.new(%.2f, %.2f, %.2f)", pos.X, pos.Y, pos.Z)
-		setclipboard(text)
-		copyButton.Text = "✅ คัดลอกแล้ว"
-		task.delay(2, function() copyButton.Text = "📋 คัดลอกพิกัด" end)
-	end
-end)
-
-game:GetService("UserInputService").InputBegan:Connect(function(input, gpe)
-	if
