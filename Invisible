@@ -219,3 +219,62 @@ player.CharacterAdded:Connect(function(char)
 		end)
 	end
 end)
+-- GOD MODE TOGGLE IN HACKGUI
+
+local godLabel = Instance.new("TextLabel", main)
+godLabel.Size = UDim2.new(0, 180, 0, 25)
+godLabel.Position = UDim2.new(0, 10, 0, 250)
+godLabel.BackgroundTransparency = 1
+godLabel.Font = Enum.Font.GothamBold
+godLabel.TextSize = 16
+godLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+godLabel.Text = "God Mode (Killbrick)"
+
+local godBtn = Instance.new("TextButton", main)
+godBtn.Size = UDim2.new(0, 100, 0, 30)
+godBtn.Position = UDim2.new(0, 200, 0, 250)
+godBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+godBtn.Font = Enum.Font.Gotham
+godBtn.TextSize = 14
+godBtn.TextColor3 = Color3.new(0, 0, 0)
+godBtn.Text = "OFF"
+
+local godActive = false
+local radius = 10
+
+local function updateGodText()
+	godBtn.Text = godActive and "ON" or "OFF"
+end
+
+godBtn.MouseButton1Click:Connect(function()
+	godActive = not godActive
+	updateGodText()
+end)
+
+-- ตัวจัดการ Killbrick
+local function monitorKillbrick()
+	while true do
+		task.wait(0.5)
+		if godActive then
+			local char = player.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				local hrp = char.HumanoidRootPart
+				local parts = workspace:GetPartBoundsInRadius(hrp.Position, radius)
+				for _, part in ipairs(parts) do
+					if part:IsA("BasePart") and part.CanTouch == true then
+						part.CanTouch = false
+					end
+				end
+			end
+		end
+	end
+end
+
+-- รีเฟรชเมื่อเกิดใหม่
+player.CharacterAdded:Connect(function()
+	updateGodText()
+end)
+
+-- เริ่มทำงานทันที
+updateGodText()
+task.spawn(monitorKillbrick)
